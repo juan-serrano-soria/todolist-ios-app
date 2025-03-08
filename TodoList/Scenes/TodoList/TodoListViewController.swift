@@ -18,7 +18,7 @@ class TodoListViewController: UIViewController {
         let tableView = UITableView()
         tableView.delegate = self
         tableView.dataSource = self
-        tableView.register(TodoCell.self, forCellReuseIdentifier: "Todocell")
+        tableView.register(TodoCell.self, forCellReuseIdentifier: "TodoCell")
         tableView.translatesAutoresizingMaskIntoConstraints = false
         return tableView
     }()
@@ -28,6 +28,12 @@ class TodoListViewController: UIViewController {
         super.viewDidLoad()
         setupUI()
         setupNavigationBar()
+        
+        // Test data
+        todos = [
+            Todo(title: "Learn UIKit"),
+            Todo(title: "Learn SwiftUI")
+        ]
     }
     
     // MARK: - Setup Methods
