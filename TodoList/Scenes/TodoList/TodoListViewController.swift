@@ -64,7 +64,32 @@ class TodoListViewController: UIViewController {
     
     // MARK: - Actions
     @objc private func addButtonTapped() {
-        // handle adding todos
+        let alert = UIAlertController(
+            title: "New Todo",
+            message: "Enter a new todo item",
+            preferredStyle: .alert
+        )
+        
+        alert.addTextField { textField in
+            textField.placeholder = "Enter todo..."
+        }
+        
+        let addAction = UIAlertAction(title: "Add", style: .default) { [weak self] _ in
+            guard let textField = alert.textFields?.first,
+                  let text = textField.text,
+                  !text.isEmpty else { return }
+            
+            let newtTodo = Todo(title: text)
+            self?.todos.append(newtTodo)
+            self?.tableView.reloadData()
+        }
+        
+        let cancelAction = UIAlertAction(title: "Cancel", style: .cancel)
+        
+        alert.addAction(addAction)
+        alert.addAction(cancelAction)
+        
+        present(alert, animated: true)
     }
 
 }
