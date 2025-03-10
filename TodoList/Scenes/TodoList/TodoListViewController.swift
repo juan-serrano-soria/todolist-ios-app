@@ -79,8 +79,8 @@ class TodoListViewController: UIViewController {
                   let text = textField.text,
                   !text.isEmpty else { return }
             
-            let newtTodo = Todo(title: text)
-            self?.todos.append(newtTodo)
+            let newTodo = Todo(title: text)
+            self?.todos.append(newTodo)
             self?.tableView.reloadData()
         }
         
@@ -109,10 +109,19 @@ extension TodoListViewController: UITableViewDataSource, UITableViewDelegate {
         return cell
     }
     
-    func tableView(_ tableView: UITableView, didselectRowAt indexPath: IndexPath) {
+    // select and mark as complete
+    func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         tableView.deselectRow(at: indexPath, animated: true)
-        // add todo completion
+        todos[indexPath.row].isCompleted.toggle()
+        tableView.reloadRows(at: [indexPath], with: .automatic)
     }
     
+    // swipe to remove
+    func tableView(_ tableView: UITableView, commit editingStyle: UITableViewCell.EditingStyle, forRowAt indexPath: IndexPath) {
+        if editingStyle == .delete {
+            todos.remove(at: indexPath.row)
+            tableView.deleteRows(at: [indexPath], with: .fade)
+        }
+    }
 }
 
