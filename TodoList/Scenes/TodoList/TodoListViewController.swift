@@ -28,12 +28,16 @@ class TodoListViewController: UIViewController {
         super.viewDidLoad()
         setupUI()
         setupNavigationBar()
+        loadTodos()
         
         // Test data
-        todos = [
-            Todo(title: "Learn UIKit"),
-            Todo(title: "Learn SwiftUI")
-        ]
+        if todos.isEmpty {
+            todos = [
+                Todo(title: "Learn UIKit"),
+                Todo(title: "Learn SwiftUI")
+            ]
+            saveTodos()
+        }
     }
     
     // MARK: - Setup Methods
@@ -62,6 +66,21 @@ class TodoListViewController: UIViewController {
         navigationItem.rightBarButtonItem = addButton
     }
     
+    // MARK: - Storage Methods
+    private func saveTodos() {
+        if let encodedData = try? JSONEncoder().encode(todos) {
+            UserDefaults.standard.set(encodedData, forKey: "todos")
+            UserDefaults.standard.synchronize() // fixes the problem of persistence
+        }
+    }
+    
+    private func loadTodos() {
+        if let savedData = UserDefaults.standard.data(forKey: "todos"),
+           let loadedTodos = try? JSONDecoder().decode([Todo].self, from: savedData) {
+            todos = loadedTodos
+        }
+    }
+    
     // MARK: - Actions
     @objc private func addButtonTapped() {
         let alert = UIAlertController(
@@ -82,6 +101,7 @@ class TodoListViewController: UIViewController {
             let newTodo = Todo(title: text)
             self?.todos.append(newTodo)
             self?.tableView.reloadData()
+            self?.saveTodos()
         }
         
         let cancelAction = UIAlertAction(title: "Cancel", style: .cancel)
@@ -114,6 +134,7 @@ extension TodoListViewController: UITableViewDataSource, UITableViewDelegate {
         tableView.deselectRow(at: indexPath, animated: true)
         todos[indexPath.row].isCompleted.toggle()
         tableView.reloadRows(at: [indexPath], with: .automatic)
+        saveTodos()
     }
     
     // swipe to remove
@@ -121,6 +142,7 @@ extension TodoListViewController: UITableViewDataSource, UITableViewDelegate {
         if editingStyle == .delete {
             todos.remove(at: indexPath.row)
             tableView.deleteRows(at: [indexPath], with: .fade)
+            saveTodos()
         }
     }
 }
