@@ -132,8 +132,17 @@ extension TodoListViewController: UITableViewDataSource, UITableViewDelegate {
     // select and mark as complete
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         tableView.deselectRow(at: indexPath, animated: true)
-        todos[indexPath.row].isCompleted.toggle()
-        tableView.reloadRows(at: [indexPath], with: .automatic)
+        guard let cell = tableView.cellForRow(at: indexPath) else { return }
+
+        UIView.animate(withDuration: 0.3, animations: {
+            cell.transform = CGAffineTransform(scaleX: 0.97, y: 0.97)
+        }) { _ in
+            UIView.animate(withDuration: 0.1) {
+                cell.transform = .identity
+                self.todos[indexPath.row].isCompleted.toggle()
+                tableView.reloadRows(at: [indexPath], with: .automatic)
+            }
+        }
         saveTodos()
     }
     
