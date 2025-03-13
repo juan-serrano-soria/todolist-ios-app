@@ -7,6 +7,23 @@
 
 import UIKit
 
+
+// MARK: - Storage Errors
+enum StorageError: Error {
+    case saveFailure
+    case loadFailure
+    
+    var message: String {
+        switch self {
+        case .saveFailure:
+            return "Failed to save todos"
+        case .loadFailure:
+            return "Failed to load todos"
+        }
+    }
+}
+
+
 class TodoListViewController: UIViewController {
     
     // MARK: - Properties
@@ -68,17 +85,37 @@ class TodoListViewController: UIViewController {
     
     // MARK: - Storage Methods
     private func saveTodos() {
-        if let encodedData = try? JSONEncoder().encode(todos) {
+        do {
+            let encodedData = try JSONEncoder().encode(todos)
             UserDefaults.standard.set(encodedData, forKey: "todos")
             UserDefaults.standard.synchronize() // fixes the problem of persistence
+        } catch {
+            showError(StorageError.loadFailure)
         }
     }
     
     private func loadTodos() {
-        if let savedData = UserDefaults.standard.data(forKey: "todos"),
-           let loadedTodos = try? JSONDecoder().decode([Todo].self, from: savedData) {
+        guard let savedData = UserDefaults.standard.data(forKey: "todos") else { return }
+        
+        do{
+            let loadedTodos = try JSONDecoder().decode([Todo].self, from: savedData)
             todos = loadedTodos
+        } catch {
+            showError(StorageError.loadFailure)
         }
+    }
+    
+    private func showError(_ error: StorageError) {
+        let alert = UIAlertController(
+            title: "Error",
+            message: error.message,
+            preferredStyle: .alert
+        )
+        
+        let okAction = UIAlertAction(title: "OK", style: .default)
+        alert.addAction(okAction)
+        
+        present(alert, animated: true)
     }
     
     // MARK: - Actions
