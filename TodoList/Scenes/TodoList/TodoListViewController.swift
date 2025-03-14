@@ -161,7 +161,21 @@ extension TodoListViewController: UITableViewDataSource, UITableViewDelegate {
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         let cell = tableView.dequeueReusableCell(withIdentifier: "TodoCell", for: indexPath)
         let todo = todos[indexPath.row]
-        cell.textLabel?.text = todo.title
+        
+        if todo.isCompleted {
+            let attributedText = NSAttributedString(
+                string: todo.title,
+                attributes: [
+                    .strikethroughStyle: NSUnderlineStyle.single.rawValue,
+                    .foregroundColor: UIColor.systemGray
+                ]
+            )
+            cell.textLabel?.attributedText = attributedText
+        } else {
+            cell.textLabel?.attributedText = nil
+            cell.textLabel?.text = todo.title
+        }
+        
         cell.accessoryType = todo.isCompleted ? .checkmark : .none
         return cell
     }
