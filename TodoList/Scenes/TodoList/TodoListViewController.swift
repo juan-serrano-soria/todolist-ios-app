@@ -28,6 +28,17 @@ class TodoListViewController: UIViewController {
     
     // MARK: - Properties
     private var todos: [Todo] = []
+    private let searchController = UISearchController(searchResultsController: nil)
+    
+    private var currentTodos: [Todo] {
+        guard searchController.isActive,
+              let searchText = searchController.searchBar.text,
+              !searchText.isEmpty else {
+            return todos
+        }
+        
+        return todos.filter { $0.title.lowercased().contains(searchText.lowercased()) }
+    }
     
     
     // MARK: - UI Elements
@@ -74,6 +85,12 @@ class TodoListViewController: UIViewController {
         title = "Todo List"
         navigationController?.navigationBar.prefersLargeTitles = true
         
+        searchController.searchResultsUpdater = self
+        searchController.obscuresBackgroundDuringPresentation = false
+        searchController.searchBar.placeholder = "Search Todos"
+        navigationItem.searchController = searchController
+        definesPresentationContext = true
+        
         let addButton = UIBarButtonItem(
             barButtonSystemItem: .add,
             target: self,
@@ -90,7 +107,7 @@ class TodoListViewController: UIViewController {
             UserDefaults.standard.set(encodedData, forKey: "todos")
             UserDefaults.standard.synchronize() // fixes the problem of persistence
         } catch {
-            showError(StorageError.loadFailure)
+            showError(StorageError.saveFailure)
         }
     }
     
@@ -154,13 +171,13 @@ class TodoListViewController: UIViewController {
 // MARK: - UITableView DataSource and Delegate
 extension TodoListViewController: UITableViewDataSource, UITableViewDelegate {
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        return todos.count
+        return currentTodos.count
     }
     
     // Configure and return cell for each row
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         let cell = tableView.dequeueReusableCell(withIdentifier: "TodoCell", for: indexPath)
-        let todo = todos[indexPath.row]
+        let todo = currentTodos[indexPath.row]
         
         if todo.isCompleted {
             let attributedText = NSAttributedString(
@@ -190,8 +207,13 @@ extension TodoListViewController: UITableViewDataSource, UITableViewDelegate {
         }) { _ in
             UIView.animate(withDuration: 0.1) {
                 cell.transform = .identity
-                self.todos[indexPath.row].isCompleted.toggle()
-                tableView.reloadRows(at: [indexPath], with: .automatic)
+                // Get the actual todo from currentTodos
+                let todo = self.currentTodos[indexPath.row]
+                // Find and update in the main todos array
+                if let index = self.todos.firstIndex(where: { $0.id == todo.id }) {
+                    self.todos[index].isCompleted.toggle()
+                    tableView.reloadRows(at: [indexPath], with: .automatic)
+                }
             }
         }
         saveTodos()
@@ -200,10 +222,22 @@ extension TodoListViewController: UITableViewDataSource, UITableViewDelegate {
     // swipe to remove
     func tableView(_ tableView: UITableView, commit editingStyle: UITableViewCell.EditingStyle, forRowAt indexPath: IndexPath) {
         if editingStyle == .delete {
-            todos.remove(at: indexPath.row)
-            tableView.deleteRows(at: [indexPath], with: .fade)
-            saveTodos()
+            // Get the todo to delete
+            let todoToDelete = currentTodos[indexPath.row]
+            // Remove from main array
+            if let index = todos.firstIndex(where: { $0.id == todoToDelete.id }) {
+                todos.remove(at: index)
+                tableView.reloadData()
+                saveTodos()
+            }
         }
+    }
+}
+
+// MARK: - UISearchResultsUpdating
+extension TodoListViewController: UISearchResultsUpdating {
+    func updateSearchResults(for searchController: UISearchController) {
+        tableView.reloadData()
     }
 }
 
