@@ -89,6 +89,7 @@ class TodoListViewController: UIViewController {
         searchController.obscuresBackgroundDuringPresentation = false
         searchController.searchBar.placeholder = "Search Todos"
         navigationItem.searchController = searchController
+        navigationItem.hidesSearchBarWhenScrolling = false // to fix initial hidden search bar
         definesPresentationContext = true
         
         let addButton = UIBarButtonItem(
