@@ -51,34 +51,47 @@ class TodoListViewController: UIViewController {
         return tableView
     }()
     
+    // Empty state
+    private lazy var emptyStateLabel: UILabel = {
+        let label = UILabel()
+        label.text = "No todos yet!\nTap + to add a new todo"
+        label.numberOfLines = 0 // allow multiple lines
+        label.textAlignment = .center
+        label.textColor = .gray
+        label.font = .systemFont(ofSize: 16)
+        label.translatesAutoresizingMaskIntoConstraints = false
+        label.isHidden = true
+        return label
+    }()
+    
     // MARK: - Lifecycle Methods
     override func viewDidLoad() {
         super.viewDidLoad()
         setupUI()
         setupNavigationBar()
         loadTodos()
-        
-        // Test data
-        if todos.isEmpty {
-            todos = [
-                Todo(title: "Learn UIKit"),
-                Todo(title: "Learn SwiftUI")
-            ]
-            saveTodos()
-        }
+        updateEmptyState()
     }
     
     // MARK: - Setup Methods
     private func setupUI() {
         view.backgroundColor = .white
         view.addSubview(tableView)
+        view.addSubview(emptyStateLabel)
         
         NSLayoutConstraint.activate([
             tableView.topAnchor.constraint(equalTo: view.topAnchor),
             tableView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
             tableView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
-            tableView.bottomAnchor.constraint(equalTo: view.bottomAnchor)
+            tableView.bottomAnchor.constraint(equalTo: view.bottomAnchor),
+            
+            emptyStateLabel.centerXAnchor.constraint(equalTo: view.centerXAnchor),
+            emptyStateLabel.centerYAnchor.constraint(equalTo: view.centerYAnchor)
         ])
+    }
+    
+    private func updateEmptyState() {
+        emptyStateLabel.isHidden = !todos.isEmpty
     }
     
     private func setupNavigationBar() {
@@ -157,6 +170,7 @@ class TodoListViewController: UIViewController {
             self?.todos.append(newTodo)
             self?.tableView.reloadData()
             self?.saveTodos()
+            self?.updateEmptyState()
         }
         
         let cancelAction = UIAlertAction(title: "Cancel", style: .cancel)
@@ -230,6 +244,7 @@ extension TodoListViewController: UITableViewDataSource, UITableViewDelegate {
                 todos.remove(at: index)
                 tableView.reloadData()
                 saveTodos()
+                updateEmptyState()
             }
         }
     }
